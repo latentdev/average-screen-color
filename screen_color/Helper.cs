@@ -15,20 +15,21 @@ namespace screen_color
         static public Bitmap CaptureFromScreen(Rectangle rect)
         {
             Bitmap bmpScreenCapture = null;
-
-            if (rect == Rectangle.Empty)//capture the whole screen
-            {
-                bmpScreenCapture = new Bitmap(Screen.PrimaryScreen.Bounds.Width,
-                Screen.PrimaryScreen.Bounds.Height);
-            }
-            else // just the rect
+            Graphics p = null;
+            try
             {
                 bmpScreenCapture = new Bitmap(rect.Width, rect.Height);
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            if (bmpScreenCapture != null)
+            {
+                p = Graphics.FromImage(bmpScreenCapture);
+            }
 
-            Graphics p = Graphics.FromImage(bmpScreenCapture);
-
-            if (rect == Rectangle.Empty)
+           /* if (rect == Rectangle.Empty)
             { // captuer the whole screen
                 p.CopyFromScreen(Screen.PrimaryScreen.Bounds.X,
                                          Screen.PrimaryScreen.Bounds.Y,
@@ -36,10 +37,10 @@ namespace screen_color
                                          bmpScreenCapture.Size,
                                          CopyPixelOperation.SourceCopy);
 
-            }
+            }*/
             
-            else // cut a spacific rectangle
-            {
+           // else // cut a spacific rectangle
+           // {
                 try
                 {
                     p.CopyFromScreen(rect.X,
@@ -52,8 +53,10 @@ namespace screen_color
                 {
                     Console.WriteLine(e);
                 }
+            if (p != null)
+                p.Dispose();
 
-            }
+            //}
 
             return bmpScreenCapture;
         }
@@ -81,12 +84,14 @@ namespace screen_color
             Bitmap map = CaptureFromScreen(rect);
             int in_x = 0;
             int in_y = y / 2;
-
-            for (int i = 0; i < points; i++)
+            if (map != null)
             {
-                in_x = i * offset;
-                colors.Add(map.GetPixel(in_x, in_y));
-                Console.WriteLine("{0}: Red: {1}, Green: {2}, Blue: {3}", i, colors[i].R, colors[i].G, colors[i].B);
+                for (int i = 0; i < points; i++)
+                {
+                    in_x = i * offset;
+                    colors.Add(map.GetPixel(in_x, in_y));
+                    //Console.WriteLine("{0}: Red: {1}, Green: {2}, Blue: {3}", i, colors[i].R, colors[i].G, colors[i].B);
+                }
             }
             return colors;
         }
@@ -145,24 +150,24 @@ namespace screen_color
         }
         static public void serialWrite(List<Color>[] horizontal, SerialPort port)
         {
-            string letter;
+            char letter;
             for (int i=0; i < horizontal.Count();i++)
             {
                 switch(i)
                 {
                     case 0:
-                        letter = "T";
+                        letter = 'T';
                         break;
                     case 1:
-                        letter = "B";
+                        letter = 'B';
                         break;
                     default:
-                        letter = "T";
+                        letter = 'T';
                         break;
                 }
-                
-                port.Write(letter);
-                byte[] buffer = new byte[] { Convert.ToByte(horizontal[i].Count()) };
+                byte[] buffer = new byte[] { Convert.ToByte(letter) };
+                port.Write(buffer,0,1);
+                buffer = new byte[] { Convert.ToByte(horizontal[i].Count()) };
                 port.Write(buffer, 0, 1);
                 for ( int m = 0;m < horizontal[i].Count(); m++)
                 {
